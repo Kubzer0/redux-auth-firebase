@@ -1,16 +1,17 @@
 import React from 'react';
 import Auth from './Auth'
+import UserData from './UserData';
 
 
-const App =() => {
+const App = () => {
   return (
-      <div>
-        <Auth>
-          Super secret content
-        </Auth>
-      </div>
-    )
-  }
+    <div>
+      <Auth>
+        <UserData />
+      </Auth>
+    </div>
+  )
+}
 
 
 export default App
