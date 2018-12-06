@@ -1,55 +1,35 @@
 import React from 'react'
 import FloatingActionButton from 'material-ui/FloatingActionButton'
 
-import { auth, googleProvider } from '../firebaseConfig'
 
 import Forms from './Forms'
 
+import {
+  initAuthChangeListeningAction,
+  onLogOutAsyncAction,
+  onLogInByGoogleClickAsyncAction,
+  logInAsyncAction,
+  emailChangeAction,
+  passwordChangeAction
+} from '../state/auth'
+
+import { connect } from 'react-redux'
+
 class Auth extends React.Component {
-  state = {
-    email: '',
-    password: '',
-    isUserLoggedIn: false
-  }
 
   componentDidMount() {
-    auth.onAuthStateChanged(
-      user => {
-        if (user) {
-          this.setState({ isUserLoggedIn: true })
-        } else {
-          this.setState({ isUserLoggedIn: false })
-        }
-      }
-    )
+    this.props._initAuthChangeListeningAction()
   }
 
-  onEmailChangeHandler = event => {
-    this.setState({ email: event.target.value })
-  }
-  onPasswordChangeHandler = event => {
-    this.setState({ password: event.target.value })
-  }
 
   onLogInClick = () => {
-    auth.signInWithEmailAndPassword(this.state.email, this.state.password)
-      .catch(error => {
-        alert('Something is wrong! Check console for error details!')
-        console.log(error)
-      })
+    this.props._logInAsyncAction(this.state.email, this.state.password)
   }
 
-  onLogInByGoogleClick = () => {
-    auth.signInWithPopup(googleProvider)
-  }
-
-  onLogOutClickHandler = () => {
-    auth.signOut()
-  }
 
   render() {
     return (
-      this.state.isUserLoggedIn ?
+      this.props._isUserLoggedIn ?
         <div>
           <FloatingActionButton
             style={{
@@ -60,7 +40,7 @@ class Auth extends React.Component {
               color: 'white'
             }}
             secondary={true}
-            onClick={this.onLogOutClickHandler}
+            onClick={this.props._onLogOutAsyncAction}
           >
             X
           </FloatingActionButton>
@@ -68,14 +48,30 @@ class Auth extends React.Component {
         </div>
         :
         <Forms
-          email={this.state.email}
-          onEmailChangeHandler={this.onEmailChangeHandler}
-          password={this.state.password}
-          onPasswordChangeHandler={this.onPasswordChangeHandler}
+          email={this.props._email}
+          onEmailChangeHandler={this.props._emailChangeAction}
+          password={this.props._password}
+          onPasswordChangeHandler={this.props._passwordChangeAction}
           onLogInClick={this.onLogInClick}
-          onLogInByGoogleClick={this.onLogInByGoogleClick}
+          onLogInByGoogleClick={this.props._onLogInByGoogleClickAsyncAction}
         />
     )
   }
 }
-export default Auth
+
+const mapStateToProps = state => ({
+  _isUserLoggedIn: state.auth.isUserLoggedIn,
+  _email: state.auth.email,
+  _password: state.auth.password
+})
+
+const mapDispatchToProps = dispatch => ({
+  _initAuthChangeListeningAction: () => dispatch(initAuthChangeListeningAction()),
+  _onLogOutAsyncAction: () => dispatch(onLogOutAsyncAction()),
+  _onLogInByGoogleClickAsyncAction: () => dispatch(onLogInByGoogleClickAsyncAction()),
+  _logInAsyncAction: (email, password) => dispatch(logInAsyncAction(email, password)),
+  _emailChangeAction: (event)=> dispatch(emailChangeAction(event.target.value)),
+  _passwordChangeAction: (event) => dispatch(passwordChangeAction(event.target.value))
+})
+
+export default connect(mapStateToProps, mapDispatchToProps)(Auth)
