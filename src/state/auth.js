@@ -1,4 +1,4 @@
-import { auth, googleProvider } from '../firebaseConfig'
+import { auth, database, googleProvider } from '../firebaseConfig'
 
 const LOG_IN = 'auth/LOG_IN'
 const LOG_OUT = 'auth/LOG_OUT'
@@ -9,7 +9,8 @@ export const initAuthChangeListeningAction = () => (dispatch, getState) => {
     auth.onAuthStateChanged(
         user => {
             if (user) {
-                dispatch(logInAction())
+                dispatch(logInAction(user))
+                dispatch(saveLoginTimestampAsyncAction())
             } else {
                 dispatch(logOutAction())
             }
@@ -34,7 +35,16 @@ export const logInAsyncAction = () => (dispatch, getState) => {
         })
 }
 
-const logInAction = () => ({ type: LOG_IN })
+const saveLoginTimestampAsyncAction = () => (dispatch, getState) =>{
+database.ref('users/loginLogs').push({
+    timestamp: Date.now()
+})
+}
+
+const logInAction = (user) => ({ 
+    type: LOG_IN,
+    user
+ })
 const logOutAction = () => ({ type: LOG_OUT })
 
 
@@ -50,7 +60,8 @@ export const passwordChangeAction = newValue => ({
 const INITIAL_STATE = {
     email: '',
     password: '',
-    isUserLoggedIn: false
+    isUserLoggedIn: false,
+    user: null
 }
 
 
@@ -59,11 +70,13 @@ export default (state = INITIAL_STATE, action) => {
         case LOG_IN:
             return {
                 ...state,
+                user: action.user,
                 isUserLoggedIn: true
             }
         case LOG_OUT:
             return {
                 ...state,
+                user: null,
                 isUserLoggedIn: false
             }
         case EMAIL_CHANGE:
